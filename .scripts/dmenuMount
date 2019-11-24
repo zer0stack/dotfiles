@@ -1,0 +1,17 @@
+#!/bin/sh
+
+drives=$(lsblk -rp -o MOUNTPOINT,TYPE,NAME | grep ^" "part | cut -f3 -d" ")
+
+if [ -n "$drives" ]; then
+	chosen=$(echo $drives | dmenu -i -p "Choose a drive to mount");
+	
+	if [ -n "$chosen" ]; then
+		folder="/mnt";
+	
+		[ $(sudo mount $chosen $folder) ] && exit 1;
+		notify-send "Mountable drive" "$chosen has successfuly mounted."
+	fi;
+else
+	exit 1;
+fi;
+

@@ -1,0 +1,7 @@
+URxvt.font: xft:inconsolata:size=12
+URxvt.background: #002b36
+URxvt.foreground: #eee8d5
+
+URxvt.scrollBar: false
+URxvt.cursorBlink: true
+
