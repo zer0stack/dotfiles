@@ -1,2 +1,2 @@
 # dotfiles
-There is some of my dotfiles for X, bspwm and lemonbar)...
+There is some of my dotfiles for X, bspwm and lemonbar.
