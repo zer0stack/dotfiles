@@ -8,13 +8,6 @@ sysmodmap=/etc/X11/xinit/.Xmodmap
 # merge in defaults and keymaps
 
 if [ -f $sysresources ]; then
-
-
-
-
-
-
-
     xrdb -merge $sysresources
 
 fi
@@ -24,13 +17,6 @@ if [ -f $sysmodmap ]; then
 fi
 
 if [ -f "$userresources" ]; then
-
-
-
-
-
-
-
     xrdb -merge "$userresources"
 
 fi
@@ -48,9 +34,16 @@ if [ -d /etc/X11/xinit/xinitrc.d ] ; then
  unset f
 fi
 
-#twm &
-#xclock -geometry 50x50-1+1 &
-#xterm -geometry 80x50+494+51 &
-#xterm -geometry 80x20+494-0 &
-#exec xterm -geometry 80x66+0+0 -name login
-exec i3
+
+PANEL_FIFO=/tmp/panel-fifo
+PANEL_HEIGHT=22
+PANEL_FONT="-xos4-terminus-medium-r-normal--14-140-72-72-c-80-iso10646-1"
+PANEL_WM_NAME=bspwm_panel
+export PANEL_FIFO PANEL_HEIGHT PANEL_FONT PANEL_WM_NAME
+
+#redshift &
+picom &
+transmission-daemon &
+~/.fehbg &
+exec bspwm
+
