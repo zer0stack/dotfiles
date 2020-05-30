@@ -1,89 +1,5 @@
 #! /bin/sh
 
-panel_volume() {
-        volStatus=$(amixer get Master | tail -n 1 | cut -d '[' -f 4 | sed 's/].*//g')
-        volLevel=$(amixer get Master | tail -n 1 | cut -d '[' -f 2 | sed 's/%.*//g')
-	
-	hdphStatus=$(amixer get Headphone | tail -n 1 | cut -d '[' -f 4 | sed 's/].*//g')
-	spkrStatus=$(amixer get Speaker | tail -n 1 | cut -d '[' -f 4 | sed 's/].*//g')
-	        
-	if [ "$volStatus" == "on" ]
-        then
-		if [ "$volLevel" == 0 ]
-		then
-			volRes="%{F#b1a57d}0"
-		else
-			#volRes="%{F#ff1493}"
-			[ "$hdphStatus" == "on" ] && volRes+="H" 
-			[ "$spkrStatus" == "on" ] && volRes+="S"
-		fi
-        else
-		volRes="%{F#b1a57d}M"
-        fi
-	echo "$volRes%{F-}"
-}
-
-panel_battery() {
-	acStatus=$(acpi --ac-adapter | cut -d ' ' -f 3)
-	btLevel=$(acpi --battery | cut -d ' ' -f 4 | sed 's/%.*//g')
-	res=""
-	[ "$acStatus" == "on-line" ] && res+="%{F#00cc00}"
-	if [ "$btLevel" ]
-	then
-		if [ "$btLevel" -ge 80 ]; then
-			res+="|||||"	
-		elif [ "$btLevel" -ge 60 ]; then
-			res+="||||-"	
-		elif [ "$btLevel" -ge 40 ]; then
-			res+="|||--"	
-		elif [ "$btLevel" -ge 20 ]; then
-			res+="||---"
-		else
-			res+="|----"			
-		fi
-	else 
-		res+="-----"
-	fi
-	echo "$res%{F-}"	
-}
-
-panel_date() {
-	echo $(date "+%a %b %-d, %H:%M")
-}
-
-panel_mem() {
-	memTotal=$(free -h --giga | head -n 2 | tail -n 1 |tr -s ' ' | cut -d ' ' -f 2)
-	memInUse=$(free -ht --giga | tail -n 1 | tr -s ' ' | cut -d ' ' -f 3)
-
-	echo "$memInUse/$memTotal"
-}
-
-panel_lang() {
-	langSymbol=$(xkblayout-state print %s)
-	echo "$langSymbol"
-}
-
-panel_cpu() {
-	echo $(cat /proc/loadavg | cut -d ' ' -f 1)
-}
-
-panel_weather() {
-	CITY="48.67,26.6"
-	url=http://wttr.in/${CITY}?format=j1
-	weather_dir=$HOME/.scripts/weather.json
-
-	[ ! -f "$weather_dir" ] && touch ./weather.json && curl -s $url >> "$weather_dir"
-	[ ! -s "$weather_dir" ] && exit 1
-
-	overcastDate=$(jq --raw-output '.current_condition[].observation_time, .weather[0].date' "$weather_dir")
-	currentDate=$(date +%s)
-
-	[ $(expr $currentDate - $(date -d"$overcastDate" +%s)) -gt 10800 ] && curl -s $url > "$weather_dir"
-	res=$(jq --raw-output '.current_condition[] | "\(.FeelsLikeC)..\(.temp_C) °C"' "$weather_dir")
-
-	echo $res
-}
-
 if xdo id -a "$PANEL_WM_NAME" > /dev/null ; then
 	printf "%s\n" "The panel is already running." >&2
 	exit 1
@@ -94,18 +10,17 @@ trap 'trap - TERM; kill 0' INT TERM QUIT EXIT
 [ -e "$PANEL_FIFO" ] && rm "$PANEL_FIFO"
 mkfifo "$PANEL_FIFO"
 
+xtitle -t 40 -sf 'T%s\n' > "$PANEL_FIFO" &
 
-xtitle -sf 'T%s\n' > "$PANEL_FIFO" &
-# writing panel date countinuously to fifo every second
-while true; do
-	echo "S" "%{+u}%{U#30D5C8}$(panel_cpu)%{-u} %{+u}$(panel_mem)%{-u} %{+u}$(panel_battery)%{-u} %{+u}$(panel_date)%{-u} %{+u}$(panel_volume)%{-u} %{+u}$(panel_lang)%{-u}" > "$PANEL_FIFO"
-        sleep 1s
-done &
+#p_weather.sh 'S1' > "$PANEL_FIFO" &
+xkbstate -sup 'S1' > "$PANEL_FIFO" &
+clock -sf 'S2%d %b / %A / %H:%M' > "$PANEL_FIFO" &
+
 bspc subscribe report > "$PANEL_FIFO" &
 
 . panel_colors
 
-panel_bar < "$PANEL_FIFO" | lemonbar -a 32 -u 1 -n "$PANEL_WM_NAME" -g x$PANEL_HEIGHT -f "$PANEL_FONT" -F "$COLOR_DEFAULT_FG" -B "$COLOR_DEFAULT_BG" | sh &
+panel_bar < "$PANEL_FIFO" | lemonbar -n "$PANEL_WM_NAME" -g x$PANEL_HEIGHT -f "$PANEL_FONT" -F "$COLOR_DEFAULT_FG" -B "$COLOR_DEFAULT_BG" | sh &
 
 wid=$(xdo id -m -a "$PANEL_WM_NAME")
 xdo above -t "$(xdo id -N Bspwm -n root | sort | head -n 1)" "$wid"
