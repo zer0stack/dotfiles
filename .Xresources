@@ -1,14 +1,12 @@
 xterm*font: xft:DejaVu Sans Mono:pixelsize=16
 xterm*vt100*geometry: 80x50
-!!xterm*font: -*-terminus-medium-*-*-*-20-*-*-*-*-*-iso10646-*
-!!xterm*boldFont: -*-terminus-bold-*-*-*-20-*-*-*-*-*-iso10646-*
 xterm*scrollBar: false
 xterm*rightScrollBar: true
 xterm*cursorBlink: true
 xterm*jumpScroll: true
 
-*background: #fdf6e3
-*foreground: #000000
+*.background: #fefbf3
+*.foreground: #000000
 
 ! black
 *.color0: #EDEDED
